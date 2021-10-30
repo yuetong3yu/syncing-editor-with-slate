@@ -1,9 +1,11 @@
 import './App.css'
+import { SyncingEditor } from './SyncingEditor'
 
 const App = () => {
   return (
     <div className="webapp-container">
-      <div>123</div>
+      <h2>Hello, World!</h2>
+      <SyncingEditor />
     </div>
   )
 }

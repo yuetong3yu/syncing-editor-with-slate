@@ -5,7 +5,13 @@ import { withHistory } from 'slate-history'
 
 import { initialValue } from './constants'
 
-export const SyncingEditor = () => {
+interface IProps {
+  placeholder?: string
+}
+
+export const SyncingEditor: React.FC<IProps> = ({
+  placeholder = 'Please input here...',
+}) => {
   const [val, setVal] = useState(initialValue)
   const editor = useMemo(
     () => withHistory(withReact(createEditor() as any)),
@@ -13,12 +19,20 @@ export const SyncingEditor = () => {
   )
 
   return (
-    <Slate
-      editor={editor}
-      value={val}
-      onChange={(newval: any) => setVal(newval)}
+    <div
+      style={{
+        background: '#eee',
+        minHeight: '5em',
+        padding: '.6em',
+      }}
     >
-      <Editable />
-    </Slate>
+      <Slate
+        editor={editor}
+        value={val}
+        onChange={(newval: any) => setVal(newval)}
+      >
+        <Editable placeholder={placeholder} />
+      </Slate>
+    </div>
   )
 }

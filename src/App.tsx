@@ -4,7 +4,7 @@ import { SyncingEditor } from './SyncingEditor'
 const App = () => {
   return (
     <div className="webapp-container">
-      <h2>Hello, World!</h2>
+      <h2 style={{ marginBottom: 12 }}>See below:</h2>
       <SyncingEditor />
     </div>
   )

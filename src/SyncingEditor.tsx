@@ -1,13 +1,15 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createEditor } from 'slate'
 import { withReact, Slate, Editable } from 'slate-react'
 import { withHistory } from 'slate-history'
+import Mitt from 'mitt'
 
 import { initialValue } from './constants'
-
 interface IProps {
   placeholder?: string
 }
+
+const mitt = Mitt()
 
 export const SyncingEditor: React.FC<IProps> = ({
   placeholder = 'Please input here...',
@@ -17,6 +19,12 @@ export const SyncingEditor: React.FC<IProps> = ({
     () => withHistory(withReact(createEditor() as any)),
     []
   )
+
+  useEffect(() => {
+    mitt.on('*', () => {
+      console.log('123 listen...')
+    })
+  }, [])
 
   return (
     <div
@@ -30,7 +38,18 @@ export const SyncingEditor: React.FC<IProps> = ({
         editor={editor}
         value={val}
         onChange={(newval: any) => {
-          console.log('123 op', editor.operations)
+          const ops = editor.operations
+            .filter(
+              (i: any) => i.type !== 'set_selection' && i.type !== 'set_value'
+            )
+            .map((o: any) => ({
+              ...o,
+              datasource: 'one',
+            }))
+          console.log('123 ops', ops)
+          if (ops.length) {
+            mitt.emit('change', ops)
+          }
           setVal(newval)
         }}
       >

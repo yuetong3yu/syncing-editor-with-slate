@@ -29,7 +29,10 @@ export const SyncingEditor: React.FC<IProps> = ({
       <Slate
         editor={editor}
         value={val}
-        onChange={(newval: any) => setVal(newval)}
+        onChange={(newval: any) => {
+          console.log('123 op', editor.operations)
+          setVal(newval)
+        }}
       >
         <Editable placeholder={placeholder} />
       </Slate>

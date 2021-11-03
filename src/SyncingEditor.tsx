@@ -1,15 +1,14 @@
-import React, { useImperativeHandle, useMemo, useRef, useState } from 'react'
-import { createEditor } from 'slate'
+import React, { useImperativeHandle, useMemo, useState } from 'react'
+import { createEditor, Operation } from 'slate'
 import { withReact, Slate, Editable } from 'slate-react'
 import { withHistory } from 'slate-history'
-// import Mitt from 'mitt'
 
 import { initialValue } from './constants'
 interface IProps {
   placeholder?: string
 }
 
-// const emiiter = Mitt()
+type TCustomOperation = Operation & { source: string }
 
 const SyncingEditor: React.FC<IProps> = (
   { placeholder = 'Please input here...' },
@@ -20,7 +19,6 @@ const SyncingEditor: React.FC<IProps> = (
     () => withHistory(withReact(createEditor() as any)),
     []
   )
-  const id = useRef(Date.now())
 
   useImperativeHandle(ref, () => ({
     editor,
@@ -35,12 +33,16 @@ const SyncingEditor: React.FC<IProps> = (
       }}
     >
       <Slate
-        key={id.current}
         editor={editor}
         value={val}
         onChange={(newval: any) => {
-          console.log(editor.operations)
           setVal(newval)
+          if (editor.operations.length > 0) {
+            const op: TCustomOperation = {
+              ...editor.operations[0],
+            }
+            // emitter.emit(String(editorKey), op)
+          }
         }}
       >
         <Editable placeholder={placeholder} />
@@ -49,4 +51,6 @@ const SyncingEditor: React.FC<IProps> = (
   )
 }
 
-export const EditorProvider = React.forwardRef(SyncingEditor as any)
+export const EditorProvider = React.forwardRef<any, IProps>(
+  SyncingEditor as any
+)

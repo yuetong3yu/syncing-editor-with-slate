@@ -1,4 +1,4 @@
-import React, { useMemo, useRef, useState } from 'react'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { createEditor, Operation } from 'slate'
 import { withReact, Slate, Editable } from 'slate-react'
 import { withHistory } from 'slate-history'
@@ -12,6 +12,7 @@ interface IProps {
 type TCustomOperation = Operation & { source: string }
 
 const emitter = Mitt()
+const syncingOperations = ['insert_text', 'remove_text']
 
 export const SyncingEditor: React.FC<IProps> = ({
   placeholder = 'Please input here...',
@@ -22,6 +23,22 @@ export const SyncingEditor: React.FC<IProps> = ({
     []
   )
   const id = useRef(Date.now())
+  const lastOperationRef = useRef<string | null>(null)
+
+  useEffect(() => {
+    ;(emitter as any).on('*', (type: string, op: any) => {
+      if (type !== String(id.current)) {
+        if (syncingOperations.includes(op.type)) {
+          const operationTag = `${op.type}_${op.text}_${op.path.join(',')}`
+          if (operationTag !== lastOperationRef.current) {
+            console.log('123 recevice', operationTag)
+            editor.apply(op)
+            lastOperationRef.current = operationTag
+          }
+        }
+      }
+    })
+  })
 
   return (
     <div
@@ -35,10 +52,12 @@ export const SyncingEditor: React.FC<IProps> = ({
         editor={editor}
         value={val}
         onChange={(newval: any) => {
+          console.log('change', newval)
           setVal(newval)
           if (editor.operations.length > 0) {
             const op: TCustomOperation = {
               ...editor.operations[0],
+              sourcer: true,
             }
             emitter.emit(String(id.current), op)
           }

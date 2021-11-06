@@ -7,38 +7,36 @@ import Mitt from 'mitt'
 import { initialValue } from './constants'
 interface IProps {
   placeholder?: string
+  applyingId: string
+  setApplyingId: any
 }
 
-type TCustomOperation = Operation & { source: string }
+type TCustomOperation = Operation
 
 const emitter = Mitt()
 const syncingOperations = ['insert_text', 'remove_text']
 
 export const SyncingEditor: React.FC<IProps> = ({
   placeholder = 'Please input here...',
+  applyingId,
+  setApplyingId,
 }) => {
   const [val, setVal] = useState(initialValue)
   const editor = useMemo(
     () => withHistory(withReact(createEditor() as any)),
     []
   )
-  const id = useRef(Date.now())
-  const lastOperationRef = useRef<string | null>(null)
+  const id = useRef(`${Date.now()}`)
+  const remote = useRef(false)
 
   useEffect(() => {
     ;(emitter as any).on('*', (type: string, op: any) => {
       if (type !== String(id.current)) {
-        if (syncingOperations.includes(op.type)) {
-          const operationTag = `${op.type}_${op.text}_${op.path.join(',')}`
-          if (operationTag !== lastOperationRef.current) {
-            console.log('123 recevice', operationTag)
-            editor.apply(op)
-            lastOperationRef.current = operationTag
-          }
-        }
+        editor.apply(op)
+        setApplyingId(id.current)
       }
     })
-  })
+  }, [])
 
   return (
     <div
@@ -52,13 +50,14 @@ export const SyncingEditor: React.FC<IProps> = ({
         editor={editor}
         value={val}
         onChange={(newval: any) => {
-          console.log('change', newval)
           setVal(newval)
-          if (editor.operations.length > 0) {
-            const op: TCustomOperation = {
-              ...editor.operations[0],
-              sourcer: true,
-            }
+          const op: TCustomOperation = editor.operations[0]
+          if (
+            editor.operations.length > 0 &&
+            applyingId !== id.current &&
+            syncingOperations.includes(op.type)
+          ) {
+            setApplyingId(id.current)
             emitter.emit(String(id.current), op)
           }
         }}

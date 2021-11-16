@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { createEditor } from 'slate'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { createEditor, Operation } from 'slate'
 import { withReact, Slate, Editable } from 'slate-react'
 import { withHistory } from 'slate-history'
 import Mitt from 'mitt'
@@ -19,10 +19,16 @@ export const SyncingEditor: React.FC<IProps> = ({
     () => withHistory(withReact(createEditor() as any)),
     []
   )
+  const id = useRef(new Date().getTime())
+  const isFromRemote = useRef<boolean>(false)
 
   useEffect(() => {
-    mitt.on('*', () => {
-      console.log('123 listen...')
+    ;(mitt as any).on('*', (type: string, val: Operation[]) => {
+      if (type !== String(id.current)) {
+        isFromRemote.current = true
+        val.forEach((op) => editor.apply(op))
+        isFromRemote.current = false
+      }
     })
   }, [])
 
@@ -46,9 +52,8 @@ export const SyncingEditor: React.FC<IProps> = ({
               ...o,
               datasource: 'one',
             }))
-          console.log('123 ops', ops)
           if (ops.length) {
-            mitt.emit('change', ops)
+            mitt.emit(String(id.current), ops)
           }
           setVal(newval)
         }}
